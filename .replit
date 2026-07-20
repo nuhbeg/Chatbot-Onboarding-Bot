@@ -24,13 +24,13 @@ args = "Discord Onboarding Bot"
 name = "Discord Onboarding Bot"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd artifacts/chatbout-onboarding-bot && node index.js"
 waitForPort = 3000
-
-[workflows.workflow.metadata]
-outputType = "console"
 
 [agent]
 stack = "PNPM_WORKSPACE"
