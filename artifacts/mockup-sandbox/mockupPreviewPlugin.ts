@@ -8,6 +8,25 @@ import type { Plugin } from "vite";
 const MOCKUPS_DIR = "src/components/mockups";
 const GENERATED_MODULE = "src/.generated/mockup-components.ts";
 
+const CODEGEN_UNSAFE_CHAR_MAP: Record<string, string> = {
+  "<": "\\u003C",
+  ">": "\\u003E",
+  "/": "\\u002F",
+  "\\": "\\\\",
+  "\b": "\\b",
+  "\f": "\\f",
+  "\n": "\\n",
+  "\r": "\\r",
+  "\t": "\\t",
+  "\0": "\\0",
+  "\u2028": "\\u2028",
+  "\u2029": "\\u2029",
+};
+
+function escapeUnsafeCodegenChars(str: string): string {
+  return str.replace(/[<>\/\\\b\f\n\r\t\0\u2028\u2029]/g, (ch) => CODEGEN_UNSAFE_CHAR_MAP[ch] ?? ch);
+}
+
 interface DiscoveredComponent {
   globKey: string;
   importPath: string;
@@ -53,10 +72,11 @@ export function mockupPreviewPlugin(): Plugin {
 
   function generateSource(components: Array<DiscoveredComponent>): string {
     const entries = components
-      .map(
-        (c) =>
-          `  ${JSON.stringify(c.globKey)}: () => import(${JSON.stringify(c.importPath)})`,
-      )
+      .map((c) => {
+        const safeGlobKey = escapeUnsafeCodegenChars(JSON.stringify(c.globKey));
+        const safeImportPath = escapeUnsafeCodegenChars(JSON.stringify(c.importPath));
+        return `  ${safeGlobKey}: () => import(${safeImportPath})`;
+      })
       .join(",\n");
 
     return [
