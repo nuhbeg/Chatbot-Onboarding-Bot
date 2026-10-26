@@ -336,8 +336,10 @@ export async function customFetch<T = unknown>(
   input: RequestInfo | URL,
   options: CustomFetchOptions = {},
 ): Promise<T> {
+  const requestSignal = isRequest(input) ? input.signal : undefined;
   input = applyBaseUrl(input);
   const { responseType = "auto", headers: headersInit, ...init } = options;
+  const signal = init.signal === undefined ? requestSignal : init.signal;
 
   const method = resolveMethod(input, init.method);
 
@@ -370,7 +372,7 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  const response = await fetch(input, { ...init, method, headers, signal });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
